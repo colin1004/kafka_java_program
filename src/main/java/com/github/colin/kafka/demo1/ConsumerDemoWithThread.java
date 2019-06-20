@@ -21,7 +21,7 @@ public class ConsumerDemoWithThread {
 
     }
 
-//    private ConsumerDemoWithThread(){}
+    private ConsumerDemoWithThread(){}
 
     private void run(){
         Logger logger = LoggerFactory.getLogger(ConsumerDemoWithThread.class.getName());
