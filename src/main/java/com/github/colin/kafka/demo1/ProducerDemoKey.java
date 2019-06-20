@@ -30,7 +30,7 @@ public class ProducerDemoKey {
             String value = "hello world " + Integer.toString(i);
             String key = "id_" + Integer.toString(i);
 
-            ProducerRecord<String, String> record = new ProducerRecord<String, String>("first_topic", "hello world"+Integer.toString(i));
+            ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, value);
 
             logger.info("Key: "+ key); // log the key
 
