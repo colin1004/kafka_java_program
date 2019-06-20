@@ -1,4 +1,4 @@
-package com.github.colin.kafka.demo1;
+package kafka.demo1;
 
 import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -6,11 +6,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
-public class ProducerDemoWithCallback {
+public class ProducerDemoKey {
 
-    public static void main(String[] args) {
-        final Logger logger = LoggerFactory.getLogger(ProducerDemoWithCallback.class);
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        final Logger logger = LoggerFactory.getLogger(ProducerDemoKey.class);
         String bootstrapServers = "127.0.0.1:9092";
 
        // create Producer properties
@@ -24,7 +25,15 @@ public class ProducerDemoWithCallback {
 
         for (int i=0; i<10; i++) {
             // create a producer record
-            ProducerRecord<String, String> record = new ProducerRecord<String, String>("first_topic", "hello world"+Integer.toString(i));
+
+            String topic = "first_topic";
+            String value = "hello world " + Integer.toString(i);
+            String key = "id_" + Integer.toString(i);
+
+            ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, value);
+
+            logger.info("Key: "+ key); // log the key
+
 
             // send data - asynchronous
             producer.send(record, new Callback() {
@@ -45,7 +54,7 @@ public class ProducerDemoWithCallback {
                     }
 
                 }
-            });
+            }).get(); // block the send() to make it synchronous - don't do this in production!
         }
         // flush data
         producer.flush();
