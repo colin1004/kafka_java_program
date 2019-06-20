@@ -1,5 +1,6 @@
 package com.github.colin.kafka.demo3;
 
+import com.google.gson.JsonParser;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -39,14 +40,20 @@ public class ElasticSearchConsumer {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100)); // new in Kafka 2.0.0
 
             for(ConsumerRecord<String,String> record : records){
+                // 2 strategies
+                // [1] kafka generic ID
+//                String id = record.topic() + "_" + record.partition() + "_" + record.offset();
+
+                // [2] twitter feed specific id
+                String id = extractIdFromTweet(record.value());
+
                // where we insert data into ElasticSearch
                 IndexRequest indexRequest = new IndexRequest(
-                        "twitter","tweets"
+                        "twitter","tweets", id // this is to make our consumer idempotent
                 ).source(record.value(), XContentType.JSON);
 
                 IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
-                String id = indexResponse.getId();
-                logger.info(id);
+                logger.info(indexResponse.getId());
                 try{
                     Thread.sleep(1000);
                 } catch(InterruptedException e){
@@ -78,6 +85,15 @@ public class ElasticSearchConsumer {
         KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(properties);
         consumer.subscribe(Arrays.asList(topic));
         return consumer;
+    }
+
+    private static JsonParser jsonParser = new JsonParser();
+    private static String extractIdFromTweet(String tweetJson){
+        // gson library
+        return jsonParser.parse(tweetJson)
+                .getAsJsonObject()
+                .get("id_str")
+                .getAsString();
     }
 
     public static RestHighLevelClient createClient() {
